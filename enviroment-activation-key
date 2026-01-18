@@ -1,0 +1,6 @@
+venv\Scripts\Activate.ps1
+
+
+Libraries we are using
+MediaPipe
+OpenCV
