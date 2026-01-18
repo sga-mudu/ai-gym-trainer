@@ -97,8 +97,8 @@ class poseDetector():
             cv2.circle(img, (x3, y3), 8, (0, 0, 255), cv2.FILLED)
             
             # Draw angle arc
-            cv2.putText(img, f"{int(angle)}°", (x2 - 20, y2 + 30),
-                    cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 0, 255), 2)
+            cv2.putText(img, f"{int(angle)}", (x2 - 20, y2 + 30),
+                    cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 0, 0), 2)
         
         return angle
     

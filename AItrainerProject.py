@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
 import time
-import poseModule as pm
+import squatModule as pm
 
-cap = cv2.VideoCapture("./photos/correctSquat.mp4")
+cap = cv2.VideoCapture("./photos/squat-biology.mp4") # API this link
 
 detector = pm.poseDetector()
 count = 0
@@ -46,32 +46,33 @@ while True:
         # Squat counter logic
         if smoothed_angle > 160:
             direction = 0  # Standing/going down
-        elif smoothed_angle < squat_threshold and direction == 0:
+        elif smoothed_angle < 100 and direction == 0:
             direction = 1  # Reached bottom, start going up
             count += 1
             print(f"Squat #{count} completed!")
         
         # Display information
         # Display angles
-        cv2.putText(img, f"L Knee: {int(left_knee_angle)}", (50, 50), 
-                   cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
-        cv2.putText(img, f"R Knee: {int(right_knee_angle)}", (50, 100), 
-                   cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
-        cv2.putText(img, f"Avg: {int(smoothed_angle)}", (50, 150), 
+        # cv2.putText(img, f"L Knee: {int(left_knee_angle)}", (50, 50), 
+        #            cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
+        # cv2.putText(img, f"R Knee: {int(right_knee_angle)}", (50, 100), 
+        #            cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
+        cv2.putText(img, f"avg knee angle: {int(smoothed_angle)}", (50, 150), 
                    cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), 2)
         
         # Display squat count
         cv2.putText(img, f"Squats: {count}", (50, 200), 
                    cv2.FONT_HERSHEY_PLAIN, 3, (255, 255, 0), 3)
         
+        print(smoothed_angle)
         # Display squat phase
         if smoothed_angle > 160:
             phase_text = "STANDING"
             color = (0, 255, 0)  # Green
-        elif smoothed_angle > squat_threshold:
-            phase_text = "GOING DOWN"
+        elif smoothed_angle > 100:
+            phase_text = "GOING UP/DOWN"
             color = (0, 255, 255)  # Yellow
-        elif smoothed_angle > 30:
+        elif smoothed_angle <= 100:
             phase_text = "BOTTOM - GO UP!"
             color = (0, 165, 255)  # Orange
         else:
@@ -81,32 +82,7 @@ while True:
         cv2.putText(img, phase_text, (img.shape[1] - 300, 50), 
                    cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
         
-        # Draw progress bar for squat depth
-        bar_length = 400
-        bar_height = 30
-        bar_x = img.shape[1] - bar_length - 50
-        bar_y = 100
         
-        # Fill based on squat depth (inverse: smaller angle = deeper squat)
-        fill_width = int((180 - min(smoothed_angle, 180)) / 180 * bar_length)
-        
-        # Draw empty bar
-        cv2.rectangle(img, (bar_x, bar_y), 
-                     (bar_x + bar_length, bar_y + bar_height), 
-                     (100, 100, 100), -1)
-        
-        # Draw filled portion
-        cv2.rectangle(img, (bar_x, bar_y), 
-                     (bar_x + fill_width, bar_y + bar_height), 
-                     color, -1)
-        
-        # Draw bar border
-        cv2.rectangle(img, (bar_x, bar_y), 
-                     (bar_x + bar_length, bar_y + bar_height), 
-                     (255, 255, 255), 2)
-        
-        cv2.putText(img, "Squat Depth", (bar_x, bar_y - 10), 
-                   cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 2)
         
         # Calculate and display FPS
         curr_time = time.time()
@@ -114,6 +90,7 @@ while True:
         prev_time = curr_time
         cv2.putText(img, f'FPS: {int(fps)}', (img.shape[1] - 150, 50), 
                    cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
+        
     
     cv2.imshow("AI Squat Trainer", img)
     
