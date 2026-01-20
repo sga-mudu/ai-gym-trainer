@@ -11,6 +11,7 @@ direction = 0  # 0: going down, 1: going up
 prev_time = 0
 squat_threshold = 90  # Angle threshold for counting a squat
 knee_angles = []
+hip_angles = []
 
 while True:
     success, img = cap.read()
@@ -25,6 +26,12 @@ while True:
         # Calculate knee angles (hip-knee-ankle)
         # CORRECTED: For right knee, it should be 24-26-28 (hip-knee-ankle)
         # CORRECTED: For left knee, it should be 23-25-27 (hip-knee-ankle)
+
+        # Left hip angle (shoulder-hip-knee)
+        left_hip_angle = detector.findAngle(img, 11, 23, 25)
+
+        # Right hip angle (shoulder-hip-knee)
+        right_hip_angle = detector.findAngle(img, 12, 24, 26)
         
         # Left knee angle (hip-knee-ankle)
         left_knee_angle = detector.findAngle(img, 23, 25, 27)
@@ -34,15 +41,22 @@ while True:
         
         # Calculate average knee angle
         avg_knee_angle = (left_knee_angle + right_knee_angle) / 2
+
+        avg_hip_angle = (left_hip_angle + right_hip_angle) / 2
         
         # Store recent angles for smoothing
         knee_angles.append(avg_knee_angle)
+        hip_angles.append(avg_hip_angle)
         if len(knee_angles) > 5:  # Keep last 5 frames
             knee_angles.pop(0)
-        
+
+        if len(hip_angles) > 5:  # Keep last 5 frames
+            hip_angles.pop(0)
+
         # Calculate smoothed angle
         smoothed_angle = np.mean(knee_angles) if knee_angles else avg_knee_angle
-        
+        smoothed_hip_angle = np.mean(hip_angles) if hip_angles else avg_hip_angle
+
         # Squat counter logic
         if smoothed_angle > 160:
             direction = 0  # Standing/going down
@@ -51,12 +65,10 @@ while True:
             count += 1
             print(f"Squat #{count} completed!")
         
-        # Display information
+
         # Display angles
-        # cv2.putText(img, f"L Knee: {int(left_knee_angle)}", (50, 50), 
-        #            cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
-        # cv2.putText(img, f"R Knee: {int(right_knee_angle)}", (50, 100), 
-        #            cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
+        cv2.putText(img, f"avg hip angle: {int(smoothed_hip_angle)}", (50, 100), 
+                   cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), 2)
         cv2.putText(img, f"avg knee angle: {int(smoothed_angle)}", (50, 150), 
                    cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), 2)
         
@@ -68,16 +80,16 @@ while True:
         # Display squat phase
         if smoothed_angle > 160:
             phase_text = "STANDING"
-            color = (0, 255, 0)  # Green
+            color = (0, 255, 0) 
         elif smoothed_angle > 100:
             phase_text = "GOING UP/DOWN"
-            color = (0, 255, 255)  # Yellow
+            color = (0, 255, 255)  
         elif smoothed_angle <= 100:
             phase_text = "BOTTOM - GO UP!"
-            color = (0, 165, 255)  # Orange
+            color = (0, 165, 255)  
         else:
             phase_text = "DEEP SQUAT"
-            color = (0, 0, 255)  # Red
+            color = (0, 0, 255) 
         
         cv2.putText(img, phase_text, (img.shape[1] - 300, 50), 
                    cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
